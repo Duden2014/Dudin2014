@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    # Монтируем файл БД на хосте (чтобы данные сохранялись между перезапусками)
+    volumes:
+      - ./data.db:/app/data.db
+    environment:
+      - PORT=3000
+      - JWT_SECRET=change-this-secret
+    restart: unless-stopped
