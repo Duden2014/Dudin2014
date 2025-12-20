@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>Mini Social — Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; }
+    input, button, textarea { padding: 8px; margin: 4px 0; width: 100%; }
+    .col { display:flex; gap:16px; }
+    .box { flex:1; border:1px solid #ddd; padding:12px; border-radius:6px; }
+    .post { border-bottom:1px solid #eee; padding:6px 0; }
+    .small { font-size:12px; color:#666; }
+  </style>
+</head>
+<body>
+  <h1>Mini Social — Demo</h1>
+
+  <div class="col">
+    <div class="box">
+      <h3>Регистрация</h3>
+      <input id="reg-username" placeholder="username" />
+      <input id="reg-password" type="password" placeholder="password" />
+      <button id="btn-register">Зарегистрироваться</button>
+      <div id="reg-result" class="small"></div>
+    </div>
+
+    <div class="box">
+      <h3>Вход</h3>
+      <input id="login-username" placeholder="username" />
+      <input id="login-password" type="password" placeholder="password" />
+      <button id="btn-login">Войти</button>
+      <div id="login-result" class="small"></div>
+    </div>
+  </div>
+
+  <div class="box" id="after-auth" style="display:none; margin-top:12px;">
+    <h3>Аккаунт</h3>
+    <div id="me-info" class="small"></div>
+    <button id="btn-refresh-me">Обновить</button>
+    <button id="btn-logout">Выйти</button>
+  </div>
+
+  <div class="col" style="margin-top:12px;">
+    <div class="box">
+      <h3>Отправить сообщение</h3>
+      <textarea id="post-content" rows="3" placeholder="Текст сообщения"></textarea>
+      <input id="post-to" placeholder="toUserId (оставьте пустым для broadcast)" />
+      <button id="btn-post">Отправить</button>
+      <div id="post-result" class="small"></div>
+    </div>
+
+    <div class="box">
+      <h3>Inbox (broadcast + адресовано вам)</h3>
+      <button id="btn-inbox">Обновить inbox</button>
+      <div id="posts"></div>
+    </div>
+  </div>
+
+<script>
+const api = (path, opts) => fetch(path, Object.assign({headers:{'Content-Type':'application/json'}}, opts));
+
+function setToken(t) { localStorage.setItem('token', t); }
+function getToken() { return localStorage.getItem('token'); }
+function authHeaders() { const t = getToken(); return t ? { 'Authorization': 'Bearer ' + t } : {}; }
+
+document.getElementById('btn-register').onclick = async () => {
+  const username = document.getElementById('reg-username').value;
+  const password = document.getElementById('reg-password').value;
+  const res = await api('/register', { method:'POST', body: JSON.stringify({username,password}) });
+  const j = await res.json();
+  document.getElementById('reg-result').textContent = JSON.stringify(j);
+  if (j.token) { setToken(j.token); showAfterAuth(); fetchMe(); }
+};
+
+document.getElementById('btn-login').onclick = async () => {
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const res = await api('/login', { method:'POST', body: JSON.stringify({username,password}) });
+  const j = await res.json();
+  document.getElementById('login-result').textContent = JSON.stringify(j);
+  if (j.token) { setToken(j.token); showAfterAuth(); fetchMe(); }
+};
+
+document.getElementById('btn-logout').onclick = () => { localStorage.removeItem('token'); document.getElementById('after-auth').style.display='none'; };
+
+document.getElementById('btn-post').onclick = async () => {
+  const content = document.getElementById('post-content').value;
+  const toUserId = (document.getElementById('post-to').value || null);
+  const body = { content };
+  if (toUserId) body.toUserId = Number(toUserId);
+  const res = await fetch('/post', { method:'POST', headers: Object.assign({'Content-Type':'application/json'}, authHeaders()), body: JSON.stringify(body) });
+  const j = await res.json();
+  document.getElementById('post-result').textContent = JSON.stringify(j);
+};
+
+document.getElementById('btn-inbox').onclick = async () => {
+  const res = await fetch('/posts?inbox=true', { headers: authHeaders() });
+  const j = await res.json();
+  const el = document.getElementById('posts');
+  el.innerHTML = '';
+  if (j.posts && j.posts.length) {
+    j.posts.forEach(p => {
+      const d = document.createElement('div'); d.className='post';
+      d.innerHTML = '<b>' + p.author + '</b> <span class="small">(' + (p.to_user_id ? 'to ' + p.to_user_id : 'broadcast') + ')</span><div>' + escapeHtml(p.content) + '</div><div class="small">' + p.created_at + '</div>';
+      el.appendChild(d);
+    });
+  } else {
+    el.textContent = 'Пусто';
+  }
+};
+
+document.getElementById('btn-refresh-me').onclick = fetchMe;
+
+function showAfterAuth() {
+  document.getElementById('after-auth').style.display = 'block';
+}
+
+async function fetchMe() {
+  const res = await fetch('/me', { headers: authHeaders() });
+  const j = await res.json();
+  document.getElementById('me-info').textContent = JSON.stringify(j);
+}
+
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// show auth if token exists
+if (getToken()) { showAfterAuth(); fetchMe(); }
+</script>
+</body>
+</html>
