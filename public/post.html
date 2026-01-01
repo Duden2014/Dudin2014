@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Отправить — Mini Social</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Отправить сообщение</div>
+      <div class="nav"><a href="./index.html">Главная</a> <a href="./inbox.html">Inbox</a> <a href="./account.html">Аккаунт</a></div>
+    </div>
+
+    <div class="card">
+      <h3>Новое сообщение</h3>
+      <div id="msg"></div>
+      <textarea id="content" rows="4" placeholder="Текст сообщения"></textarea>
+      <input id="to" placeholder="Кому (user id) — оставьте пустым для broadcast" />
+      <p><button id="btn">Отправить</button></p>
+    </div>
+
+    <div class="footer"></div>
+  </div>
+
+<script>
+const token = localStorage.getItem('token');
+const elMsg = id => document.getElementById(id);
+function showMsg(text, ok=true){
+  elMsg('msg').innerHTML = '<div class="alert '+(ok?'ok':'err')+'">'+text+'</div>';
+}
+
+document.getElementById('btn').onclick = async () => {
+  if(!token){ showMsg('Сначала войдите', false); setTimeout(()=>location.href='./login.html',700); return; }
+  const content = document.getElementById('content').value.trim();
+  const toVal = document.getElementById('to').value.trim();
+  if(!content){ showMsg('Введите текст', false); return; }
+  const body = { content };
+  if(toVal) body.toUserId = Number(toVal);
+  try{
+    const res = await fetch('/post', { method:'POST', headers: Object.assign({'Content-Type':'application/json'},{'Authorization':'Bearer '+token}), body: JSON.stringify(body) });
+    const j = await res.json();
+    if(res.ok){ showMsg('Отправлено'); document.getElementById('content').value=''; }
+    else showMsg(j.error||JSON.stringify(j), false);
+  }catch(e){ showMsg('Ошибка сети', false); }
+}
+</script>
+</body>
+</html>
