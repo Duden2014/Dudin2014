@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inbox — Mini Social</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Inbox</div>
+      <div class="nav"><a href="./index.html">Главная</a> <a href="./post.html">Отправить</a> <a href="./account.html">Аккаунт</a></div>
+    </div>
+
+    <div class="card">
+      <div id="msg"></div>
+      <p><button id="reload">Обновить</button></p>
+      <div id="list"></div>
+    </div>
+
+    <div class="footer"></div>
+  </div>
+
+<script>
+const token = localStorage.getItem('token');
+const el = id => document.getElementById(id);
+function showErr(t){ el('msg').innerHTML = '<div class="alert err">'+t+'</div>'; }
+function showOk(t){ el('msg').innerHTML = '<div class="alert ok">'+t+'</div>'; }
+
+async function load(){
+  if(!token){ showErr('Сначала войдите'); setTimeout(()=>location.href='./login.html',700); return; }
+  try{
+    const res = await fetch('/posts?inbox=true', { headers: {'Authorization':'Bearer '+token} });
+    const j = await res.json();
+    if(!res.ok){ showErr(j.error||JSON.stringify(j)); return; }
+    el('list').innerHTML = '';
+    if(!j.posts || j.posts.length===0){ el('list').innerHTML = '<div class="small">Пусто</div>'; return; }
+    j.posts.forEach(p=>{
+      const d = document.createElement('div'); d.className='post';
+      d.innerHTML = '<div class="kv"><b>'+escapeHtml(p.author)+'</b><div class="small" style="margin-left:8px">'+(p.to_user_id?('to '+p.to_user_id):'broadcast')+'</div></div><div>'+escapeHtml(p.content)+'</div><div class="small">'+p.created_at+'</div>';
+      el('list').appendChild(d);
+    });
+  }catch(e){ showErr('Ошибка сети'); }
+}
+
+function escapeHtml(s){ if(!s) return ''; return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+document.getElementById('reload').onclick = load;
+load();
+</script>
+</body>
+</html>
