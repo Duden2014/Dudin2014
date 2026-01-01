@@ -1,0 +1,64 @@
+:root{
+  --bg:#fff6fb;
+  --card:#ffffff;
+  --accent1:#ff416c; /* яркий розово-красный */
+  --accent2:#ffaf7b; /* оранжево-розовый */
+  --accent3:#6a11cb; /* фиолетовый */
+  --text:#1b1b1b;
+  --muted:#666;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --radius:12px;
+  --shadow: 0 6px 18px rgba(20,20,30,0.08);
+  font-family: "Inter", Arial, Helvetica, sans-serif;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background: linear-gradient(135deg, #fff6fb 0%, #f0f9ff 100%);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+.container{max-width:980px;margin:18px auto;padding:18px;}
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  color:white;padding:16px;border-radius:16px;
+  box-shadow:var(--shadow);
+}
+.logo{font-weight:700;font-size:18px;letter-spacing:0.2px}
+.nav a{color:rgba(255,255,255,0.95);text-decoration:none;margin-left:12px;font-weight:600}
+.card{
+  background:var(--card);padding:16px;border-radius:var(--radius);
+  margin-top:14px;box-shadow:var(--shadow);
+}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.col{flex:1;min-width:220px}
+input[type="text"],input[type="password"],textarea{
+  width:100%;padding:10px;border-radius:10px;border:1px solid #eee;font-size:15px;
+  background:linear-gradient(180deg,#fff,#fff);outline:none;
+}
+textarea{resize:vertical}
+button{
+  background:linear-gradient(90deg,var(--accent3),var(--accent1));
+  color:white;padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer;
+  box-shadow: 0 6px 14px rgba(106,17,203,0.16);
+}
+.btn-ghost{background:transparent;border:1px solid #eee;color:var(--text)}
+.small{font-size:13px;color:var(--muted)}
+.post{border-bottom:1px solid #f1f1f1;padding:10px 0}
+.kv{display:flex;gap:8px;align-items:center}
+.badge{background:var(--accent2);color:white;padding:4px 8px;border-radius:999px;font-weight:700;font-size:12px}
+.alert{padding:10px;border-radius:8px;margin-bottom:10px}
+.alert.ok{background:rgba(22,163,74,0.08);color:var(--success);border:1px solid rgba(22,163,74,0.12)}
+.alert.err{background:rgba(220,38,38,0.06);color:var(--danger);border:1px solid rgba(220,38,38,0.08)}
+.footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+@media(max-width:640px){
+  .header{flex-direction:column;align-items:flex-start}
+  .nav a{display:inline-block;margin:6px 8px 0 0}
+}
