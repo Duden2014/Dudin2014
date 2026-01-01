@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Регистрация — Mini Social</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Регистрация</div>
+      <div class="nav"><a href="./index.html">Главная</a> <a href="./login.html">Вход</a></div>
+    </div>
+
+    <div class="card">
+      <h3>Создать аккаунт</h3>
+      <div id="msg"></div>
+      <input id="username" placeholder="Имя пользователя" />
+      <input id="password" type="password" placeholder="Пароль" />
+      <p><button id="btn">Зарегистрироваться</button></p>
+      <p class="small">Уже есть аккаунт? <a href="./login.html">Войти</a></p>
+    </div>
+
+    <div class="footer"></div>
+  </div>
+
+<script>
+const elMsg = id => document.getElementById(id);
+function showMsg(text, ok=true){
+  elMsg('msg').innerHTML = '<div class="alert '+(ok?'ok':'err')+'">'+text+'</div>';
+}
+
+document.getElementById('btn').onclick = async () => {
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value;
+  if(!u||!p){ showMsg('Введите имя и пароль', false); return; }
+  try{
+    const res = await fetch('/register', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u,password:p})
+    });
+    const j = await res.json();
+    if(res.ok){ localStorage.setItem('token', j.token); showMsg('Успешно! Перенаправляю...'); setTimeout(()=>location.href='./account.html',700); }
+    else showMsg(j.error||JSON.stringify(j), false);
+  }catch(e){ showMsg('Ошибка сети', false); }
+}
+</script>
+</body>
+</html>
