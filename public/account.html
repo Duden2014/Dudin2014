@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Аккаунт — Mini Social</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Мой аккаунт</div>
+      <div class="nav"><a href="./index.html">Главная</a> <a href="./inbox.html">Inbox</a> <a href="./post.html">Отправить</a></div>
+    </div>
+
+    <div class="card">
+      <div id="msg"></div>
+      <div id="meinfo"></div>
+
+      <div id="admin-panel" style="margin-top:12px;display:none">
+        <h4>Admin: Управление Pro</h4>
+        <input id="admin-userid" placeholder="userId" />
+        <p>
+          <button id="grant">Выдать Pro</button>
+          <button id="revoke" class="btn-ghost">Отозвать Pro</button>
+        </p>
+        <p><button id="list-users" class="btn-ghost">Список пользователей</button></p>
+        <div id="users"></div>
+      </div>
+
+      <p><button id="logout" class="btn-ghost">Выйти</button></p>
+    </div>
+
+    <div class="footer"></div>
+  </div>
+
+<script>
+const token = localStorage.getItem('token');
+const el = id=>document.getElementById(id);
+function showAlert(t,ok=true){ el('msg').innerHTML = '<div class="alert '+(ok?'ok':'err')+'">'+t+'</div>'; }
+
+async function loadMe(){
+  if(!token){ showAlert('Сначала войдите', false); setTimeout(()=>location.href='./login.html',700); return; }
+  try{
+    const res = await fetch('/me', { headers:{'Authorization':'Bearer '+token} });
+    const j = await res.json();
+    if(!res.ok){ showAlert(j.error||JSON.stringify(j), false); return; }
+    el('meinfo').innerHTML = '<div><b>'+j.user.username+'</b> <span class="small">id:'+j.user.id+'</span></div><div class="small">Admin: '+(j.user.is_admin? 'да':'нет')+' • Pro: '+(j.user.is_pro? 'да':'нет')+'</div>';
+    if(j.user.is_admin) el('admin-panel').style.display='block';
+    else el('admin-panel').style.display='none';
+  }catch(e){ showAlert('Ошибка сети', false); }
+}
+
+document.getElementById('logout').onclick = ()=>{
+  localStorage.removeItem('token'); location.href='./index.html';
+};
+
+document.getElementById('grant').onclick = async ()=>{
+  const uid = el('admin-userid').value.trim(); if(!uid){ showAlert('Введите userId', false); return; }
+  try{
+    const res = await fetch('/admin/grant-pro', { method:'POST', headers: {'Content-Type':'application/json','Authorization':'Bearer '+token}, body: JSON.stringify({userId:Number(uid)})});
+    const j = await res.json(); if(res.ok) showAlert(j.message); else showAlert(j.error||JSON.stringify(j), false);
+  }catch(e){ showAlert('Ошибка сети', false); }
+};
+
+document.getElementById('revoke').onclick = async ()=>{
+  const uid = el('admin-userid').value.trim(); if(!uid){ showAlert('Введите userId', false); return; }
+  try{
+    const res = await fetch('/admin/revoke-pro', { method:'POST', headers: {'Content-Type':'application/json','Authorization':'Bearer '+token}, body: JSON.stringify({userId:Number(uid)})});
+    const j = await res.json(); if(res.ok) showAlert(j.message); else showAlert(j.error||JSON.stringify(j), false);
+  }catch(e){ showAlert('Ошибка сети', false); }
+};
+
+document.getElementById('list-users').onclick = async ()=>{
+  try{
+    const res = await fetch('/admin/users', { headers:{'Authorization':'Bearer '+token} });
+    const j = await res.json(); if(!res.ok){ showAlert(j.error||JSON.stringify(j), false); return; }
+    el('users').innerHTML = j.users.map(u=>'<div class="post"><b>'+u.username+'</b> <span class="small">id:'+u.id+'</span> • Pro:'+(u.is_pro? 'да':'нет')+'</div>').join('');
+  }catch(e){ showAlert('Ошибка сети', false); }
+};
+
+loadMe();
+</script>
+</body>
+</html>
